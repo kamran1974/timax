@@ -45,9 +45,17 @@ def upload_worklog(request):
                 decoded_file = file.read().decode("utf-8-sig").splitlines()
                 csv_reader = csv.reader(decoded_file)
                 csv_data = list(csv_reader)
-                if data:=check_user_exists(csv_data): #comment for develop mode
-                    raise Exception('کاربران نمایش داده شده در سایت ثبت نام نیستن')
-                    
+                
+                users_map = {user.personnel_code: user for user in User.objects.all()}
+                
+                csv_personnel_codes = {row[0].strip() for row in csv_data}
+                invalid_codes = csv_personnel_codes - set(users_map.keys())
+                if invalid_codes:
+                    for code in invalid_codes:
+                        messages.error(request, f"کاربر با کد پرسنلی {code} یافت نشد.")
+                    return redirect("inout:upload_worklog")  
+                
+                worklogs = []
                 for row in csv_data:
                     try:
                         personnel_code = row[0].strip()
@@ -58,36 +66,32 @@ def upload_worklog(request):
                         status = row[5].strip()
 
                         gregorian_date = JalaliDate(year, month, day).to_gregorian()
-                        try:
-                            WorkLog.objects.create(
-                                user = User.objects.get(personnel_code=personnel_code),
-                                personnel_code=personnel_code,
-                                time=time,
-                                date=gregorian_date,
-                                event_type=event_type,
-                                device_id=device_id,
-                                status=status,
-                            )
-                        except Exception as e:
-                            pass
+                        user = users_map.get(personnel_code)
 
+                        worklogs.append(WorkLog(
+                            user=user,
+                            personnel_code=personnel_code,
+                            time=time,
+                            date=gregorian_date,
+                            event_type=event_type,
+                            device_id=device_id,
+                            status=status,
+                        ))
                     except Exception as e:
                         messages.warning(request, f"خطا در پردازش ردیف {row}: {e}")
-
+                
+                WorkLog.objects.bulk_create(worklogs,  ignore_conflicts=True)
                 messages.success(request, "فایل با موفقیت آپلود و پردازش شد.")
             except Exception as e:
                 messages.error(request, f"خطا در پردازش فایل: {e}")
-                e = str(e)
-                if (e == 'کاربران نمایش داده شده در سایت ثبت نام نیستن' ):
-                    for message in data:
-                        messages.error(request, message)
-                        messages.warning(request,'\n.')
         else:
             messages.error(request, "فرم معتبر نیست. لطفاً دوباره تلاش کنید.")
     else:
         form = CSVUploadForm()
 
     return render(request, "inout/upload_worklog.html", {"form": form})
+
+
 
 
 
