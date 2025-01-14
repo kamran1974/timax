@@ -1,112 +1,23 @@
-<head>
-    <style>
-        .navbar {
-    background-color: #007BFF;
-    color: white;
-    padding: 10px 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    width: 100%;
-    z-index: 1000;
-    top: 0;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: white;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.logo:hover {
-    color: #ffd700;
-}
-
-.menu {
-    list-style: none;
-    display: flex;
-    gap: 20px;
-    margin: 0;
-    padding: 0;
-}
-
-.menu li a {
-    text-decoration: none;
-    color: white;
-    font-size: 1rem;
-    transition: color 0.3s ease;
-    padding: 8px 12px;
-    border-radius: 4px;
-}
-
-.menu li a:hover {
-    color: #ffd700;
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-/* تنظیمات برای حالت موبایل */
-.menu-toggle {
-    display: none;
-    flex-direction: column;
-    cursor: pointer;
-    gap: 5px;
-}
-
-.menu-toggle span {
-    width: 25px;
-    height: 3px;
-    background-color: white;
-    border-radius: 3px;
-}
-
-/* واکنش‌گرایی */
-@media screen and (max-width: 768px) {
-    .menu {
-        flex-direction: column;
-        display: none;
-        position: absolute;
-        top: 60px;
-        right: 20px;
-        background-color: #007BFF;
-        padding: 10px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-    }
-
-    .menu.active {
-        display: flex;
-    }
-
-    .menu-toggle {
-        display: flex;
-    }
-}
-    </style>
-</head>
-
-<nav class="navbar">
-    <div class="container">
-        <a href="{% url 'inout:upload_worklog' %}" class="logo">سیستم مدیریت</a>
-        <ul class="menu">
-            {% if user.is_superuser %}
-                <li><a href="{% url 'inout:upload_worklog' %}">آپلود فایل</a></li>
-            {% endif %}
-            <li><a href="{% url 'inout:worklog_report' %}">گزارش ورود و خروج</a></li>
-            <li><a href="{% url 'logout' %}">خروج</a></li>
-        </ul>
-        <div class="menu-toggle">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-    </div>
+<nav class="navbar navbar-expand-lg custom-navbar">
+  <div class="container-fluid">
+      <a class="navbar-brand" href="#">سیستم مدیریت</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              {% if user.is_superuser %}
+              <li class="nav-item">
+                  <a class="nav-link active" href="{% url 'inout:upload_worklog' %}">آپلود فایل</a>
+              </li>
+              {% endif %}
+              <li class="nav-item">
+                  <a class="nav-link" href="{% url 'inout:worklog_report' %}">گزارش ورود و خروج</a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" href="{% url 'logout' %}">خروج</a>
+              </li>
+          </ul>
+      </div>
+  </div>
 </nav>

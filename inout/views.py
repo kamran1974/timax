@@ -1,13 +1,12 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse
-
 from account.models import User
 
 import csv
 from persiantools.jdatetime import JalaliDate
 from django.contrib import messages
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model
 from django.views.generic import ListView
 
@@ -45,11 +44,11 @@ def upload_worklog(request):
             try:
                 decoded_file = file.read().decode("utf-8-sig").splitlines()
                 csv_reader = csv.reader(decoded_file)
-
-                if data:=check_user_exists(csv_reader): #comment for develop mode
+                csv_data = list(csv_reader)
+                if data:=check_user_exists(csv_data): #comment for develop mode
                     raise Exception('کاربران نمایش داده شده در سایت ثبت نام نیستن')
-
-                for row in csv_reader:
+                    
+                for row in csv_data:
                     try:
                         personnel_code = row[0].strip()
                         time = row[1].strip()
@@ -59,16 +58,19 @@ def upload_worklog(request):
                         status = row[5].strip()
 
                         gregorian_date = JalaliDate(year, month, day).to_gregorian()
+                        try:
+                            WorkLog.objects.create(
+                                user = User.objects.get(personnel_code=personnel_code),
+                                personnel_code=personnel_code,
+                                time=time,
+                                date=gregorian_date,
+                                event_type=event_type,
+                                device_id=device_id,
+                                status=status,
+                            )
+                        except Exception as e:
+                            pass
 
-                        WorkLog.objects.create(
-                            user = User.objects.get(personnel_code=personnel_code),
-                            personnel_code=personnel_code,
-                            time=time,
-                            date=gregorian_date,
-                            event_type=event_type,
-                            device_id=device_id,
-                            status=status,
-                        )
                     except Exception as e:
                         messages.warning(request, f"خطا در پردازش ردیف {row}: {e}")
 
@@ -92,6 +94,7 @@ def upload_worklog(request):
 class WorkLogReportView(LoginRequiredMixin, ListView):
     model = WorkLog
     template_name = "inout/report_home.html"
+
     context_object_name = "logs"
     paginate_by = 10
 
@@ -133,12 +136,16 @@ class WorkLogReportView(LoginRequiredMixin, ListView):
 
 
 def generate_pdf(request):
-    user_id = request.GET.get("user")
-    start_date = convert_jalali_date_to_gregorian(request.GET.get("start_date"))
-    end_date = convert_jalali_date_to_gregorian(request.GET.get("end_date"))
+    try:
+        user_id = request.GET.get("user")
+        start_date = convert_jalali_date_to_gregorian(request.GET.get("start_date"))
+        end_date = convert_jalali_date_to_gregorian(request.GET.get("end_date"))
 
-    buffer = create_report(user_id, start_date, end_date)
+        buffer = create_report(user_id, start_date, end_date)
 
-    response = HttpResponse(buffer, content_type="application/pdf")
-    response["Content-Disposition"] = f"attachment; filename=report_{user_id}_{start_date}_{end_date}.pdf"
-    return response
+        response = HttpResponse(buffer, content_type="application/pdf")
+        response["Content-Disposition"] = f"attachment; filename=report_{user_id}_{start_date}_{end_date}.pdf"
+        return response
+    except:
+        messages.error(request, "خطایی در تولید گزارش رخ داد. لطفاً دوباره تلاش کنید.")
+        return redirect("inout:worklog_report")

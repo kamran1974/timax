@@ -14,6 +14,7 @@ def calculate_user_logs(user_id, start_date, end_date):
     # personnel_code='0000000001',#0000000001, 0000000620, 0000000820, 0000000036
     logs = WorkLog.objects.filter(
         user_id=user_id,
+        # personnel_code='0000000001',
         date__range=(start_date, end_date)
     ).order_by('date', 'time')
 
@@ -132,7 +133,7 @@ def calculate_user_log_to_list(user_log:dict) -> list:
         if entries_length == 0:
             exsist_last = ''
         else:
-            exsist_last = exits[-1]
+            exsist_last = exits[-1] if len(exits) !=0 else ''
 
         if entries_length <3:
             space = 3 - entries_length
