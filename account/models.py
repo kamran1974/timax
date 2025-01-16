@@ -10,6 +10,7 @@ class User(AbstractUser):
     DEPARTMENT_CHOICES = [
         ('technical', 'فنی'),
         ('services', 'خدمات'),
+        ('reception' , 'پذیرش'),
         ('other', 'سایر'),
     ]
     department = models.CharField(max_length=20, choices=DEPARTMENT_CHOICES, verbose_name="بخش فعالیت", null=True, blank=True)
