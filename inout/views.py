@@ -111,7 +111,7 @@ class WorkLogReportView(LoginRequiredMixin, ListView):
         end_date   = self.request.GET.get("end_date", "")
         start_date = self.request.GET.get("start_date", "")
 
-        if user.is_superuser:
+        if user.is_staff:
             user = self.request.GET.get("user", "")
         else:
             user = user.id
